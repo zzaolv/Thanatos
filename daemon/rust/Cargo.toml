@@ -1,0 +1,35 @@
+# 文件路径: /Thanatos/daemon/rust/Cargo.toml
+
+[package]
+name = "thanatos_logic"
+version = "2.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"] # We compile to a static library for C++ to link against.
+
+[dependencies]
+# FFI bridge to C++
+cxx = "1.0"
+
+# Database
+rusqlite = { version = "0.31.0", features = ["bundled"] }
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+# High-performance concurrent HashMap
+dashmap = "5.5.3"
+
+# Direct libc calls for sending signals
+libc = "0.2"
+
+# Protobuf/gRPC types
+prost = "0.12"
+tonic = "0.11"
+
+[build-dependencies]
+cxx-build = "1.0"
+# For generating Rust gRPC/Protobuf code from .proto files
+tonic-build = { version = "0.11", features = ["prost"] }

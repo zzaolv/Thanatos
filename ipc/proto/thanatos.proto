@@ -1,0 +1,135 @@
+// 文件路径: /Thanatos/ipc/proto/thanatos.proto
+
+syntax = "proto3";
+
+package thanatos.ipc;
+
+import "google/protobuf/empty.proto";
+
+// --- Enums ---
+enum ManagementPolicy {
+  POLICY_UNSPECIFIED = 0;
+  UNMANAGED = 1;
+  LENIENT_BACKGROUND = 2;
+  STRICT_BACKGROUND = 3;
+  AI_MANAGED = 4;
+}
+
+enum FreezeMode {
+  MODE_UNSPECIFIED = 0;
+  MODE_SIGSTOP = 1;
+  MODE_KILL = 2;
+  MODE_HIBERNATE = 3;
+}
+
+enum NetworkPolicy {
+  NET_POLICY_UNSPECIFIED = 0;
+  ALLOW_ALL = 1;
+  WIFI_ONLY = 2;
+  BLOCK_ALL = 3;
+}
+
+enum OomPriority {
+  OOM_UNSPECIFIED = 0;
+  OOM_DEFAULT = 1;
+  OOM_HIGH = 2; // Less likely to be killed
+  OOM_MEDIUM = 3;
+  OOM_LOW = 4; // More likely to be killed
+}
+
+enum ComponentType {
+  COMP_UNSPECIFIED = 0;
+  COMP_SERVICE = 1;
+  COMP_RECEIVER = 2;
+  COMP_ACTIVITY = 3;
+  COMP_PROVIDER = 4;
+}
+
+enum UnfreezeReason {
+  REASON_UNSPECIFIED = 0;
+  FCM_PUSH = 1;
+  SYSTEM_ALARM = 2;
+  USER_REQUEST = 3;
+  AI_PREDICTION = 4;
+  ASSOCIATED_START = 5;
+}
+
+// --- Messages ---
+message AppConfig {
+  string package_name = 1;
+  ManagementPolicy policy = 2;
+  FreezeMode freeze_mode = 3;
+  OomPriority oom_priority = 4;
+  NetworkPolicy network_policy = 5;
+  bool allow_wakeup_for_push = 7;
+  bool allow_autostart = 8;
+}
+
+message ComponentInfo {
+  string package_name = 1;
+  string class_name = 2;
+  ComponentType type = 3;
+  bool enabled = 4;
+}
+
+message LaunchRule {
+  string source_package = 1;
+  string target_package = 2;
+  bool allowed = 3;
+}
+
+message EventLog {
+  int64 timestamp = 1;
+  string package_name = 2;
+  string event_description = 3;
+}
+
+message RuntimeStats {
+  int64 total_mem_kb = 1;
+  int64 avail_mem_kb = 2;
+  int32 frozen_app_count = 3;
+  float cpu_usage_percent = 4;
+  int64 network_speed_bps = 5;
+}
+
+message FrameworkEvent {
+    enum EventType {
+        TYPE_UNSPECIFIED = 0;
+        SCREEN_ON = 1;
+        SCREEN_OFF = 2;
+        APP_FOREGROUND = 3;
+        APP_BACKGROUND = 4;
+        FCM_WAKEUP = 5;
+    }
+    EventType event_type = 1;
+    string source_package = 2; // For APP events, this is PID.
+    string target_package = 3; // For APP events, this is the package name.
+    int64 timestamp = 4;
+}
+
+message TempUnfreezeRequest {
+  string package_name = 1;
+  UnfreezeReason reason = 2;
+  int32 duration_ms = 3; // 0 means until next screen off
+}
+
+// --- Services ---
+service AppControlService { // App <-> Daemon
+  rpc SetAppConfig(AppConfig) returns (google.protobuf.Empty);
+  rpc GetAllConfigs(google.protobuf.Empty) returns (stream AppConfig);
+  rpc GetComponents(ComponentInfo) returns (stream ComponentInfo);
+  rpc SetComponentEnabled(ComponentInfo) returns (google.protobuf.Empty);
+  rpc GetLaunchRules(google.protobuf.Empty) returns (stream LaunchRule);
+  rpc SetLaunchRule(LaunchRule) returns (google.protobuf.Empty);
+}
+
+service SystemService { // Sensor <-> Daemon
+  rpc PushFrameworkEvents(stream FrameworkEvent) returns (google.protobuf.Empty);
+  rpc RequestTemporaryUnfreeze(TempUnfreezeRequest) returns (google.protobuf.Empty);
+  rpc ShouldAllowLaunch(LaunchRule) returns (LaunchRule);
+}
+
+service DashboardService { // App <-> Daemon
+  rpc StreamRuntimeStats(google.protobuf.Empty) returns (stream RuntimeStats);
+  rpc GetRecentEvents(google.protobuf.Empty) returns (stream EventLog);
+}

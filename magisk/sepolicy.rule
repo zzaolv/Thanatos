@@ -1,0 +1,39 @@
+# 文件路径: /Thanatos/magisk/sepolicy.rule
+
+# 1. Define a new SELinux type (context) for our daemon process and its executable file.
+type thanatosd, domain;
+type thanatosd_exec, exec_type, file_type, vendor_file_type;
+
+# 2. Allow the init process to transition to our daemon's domain when executing the binary.
+# This is the standard way to launch a daemon with its own context.
+init_daemon_domain(thanatosd)
+
+# 3. Grant permissions for IPC via Unix Domain Socket.
+# allow [source_type] [target_type]:[class] { permissions };
+allow thanatosd system_data_file:dir { search write add_name };
+allow thanatosd system_data_file:sock_file { create setattr read write };
+allow thanatosd untrusted_app:unix_stream_socket connectto; # Allow App to connect to daemon
+allow thanatosd system_server:unix_stream_socket connectto; # Allow Sensor (in system_server) to connect to daemon
+
+# 4. Allow the daemon to execute itself.
+allow thanatosd thanatosd_exec:file { read execute open execute_no_trans };
+
+# 5. Grant permissions for process management.
+allow thanatosd self:process { signal sigkill sigstop }; # Send signals to processes
+allow thanatosd { app_domain system_server }:process { signal sigkill sigstop }; # Allow daemon to signal apps and system
+allow thanatosd proc:file { read open write getattr }; # Access /proc/<pid>/oom_score_adj etc.
+allow thanatosd proc_net:file { read open getattr }; # Access /proc/net/dev for network stats
+
+# 6. Grant permissions to execute shell commands (like 'pm' or 'iptables').
+allow thanatosd shell_exec:file rx_file_perms;
+allow thanatosd system_file:file execute_no_trans;
+
+# 7. Grant permissions to access cgroups for process state management.
+allow thanatosd cgroup:dir { search read open };
+allow thanatosd cgroup:file { read write open };
+
+# 8. Grant permissions to find system services via ServiceManager (for potential future direct binder calls).
+allow thanatosd app_api_service:service_manager find;
+allow thanatosd system_api_service:service_manager find;
+allow thanatosd activity_service:service_manager find;
+allow thanatosd package_service:service_manager find;

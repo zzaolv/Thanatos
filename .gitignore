@@ -1,0 +1,44 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Android Studio
+/local.properties
+/.gradle/
+/build/
+/app/build/
+*.apk
+*.aab
+
+# C/C++
+*.o
+*.a
+*.so
+*.lo
+*.la
+*.dll
+*.exe
+*.out
+
+# CMake
+/cmake-build-*/
+/CMakeCache.txt
+/CMakeFiles/
+/cmake_install.cmake
+
+# Rust
+/target/
+/daemon/rust/Cargo.lock
+
+# Distribution
+/release/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

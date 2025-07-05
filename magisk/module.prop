@@ -1,0 +1,8 @@
+# 文件路径: /Thanatos/magisk/module.prop
+id=thanatos-core
+name=Thanatos Core Service
+version=v2.0.0
+versionCode=200
+author=Jark
+description=The core daemon for Thanatos system orchestrator. Manages app lifecycle, intercepts wakelocks, and provides system stats.
+support=https://github.com/jark006/Thanatos
