@@ -1,5 +1,5 @@
 # 文件路径: /Thanatos/daemon/CMakeLists.txt
-
+# 成功
 cmake_minimum_required(VERSION 3.22)
 
 project(thanatosd LANGUAGES CXX C)
